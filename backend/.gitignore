@@ -1,0 +1,16 @@
+# Python Virtual Environments
+venv/
+env/
+__pycache__/
+*.pyc
+
+# Data & Models (DO NOT PUSH TO GITHUB)
+data/
+models/
+*.keras
+*.h5
+*.hdf5
+
+# IDEs
+.vscode/
+.idea/

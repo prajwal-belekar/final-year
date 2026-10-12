@@ -1,0 +1,9 @@
+.venv/
+data/
+docs/
+models/*.keras
+!models/adult_ultimate_best.keras
+!models/pediatric_ultimate_best.keras
+.git/
+__pycache__/
+*.pyc
