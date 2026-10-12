@@ -130,6 +130,9 @@ function Upload() {
     if (!p.name.trim() || !p.age) return setErr('Enter the patient name and age.');
     const age = Number(p.age);
     if (!Number.isInteger(age) || age < 0 || age > 120) return setErr('Enter an age between 0 and 120 years.');
+    if (inputMode === 'hardware' && age >= 18) {
+      return setErr('Adult hardware analysis is not available with the current backend model. Use Upload files with a PCG .wav file and ECG .npy file.');
+    }
     if (inputMode === 'file' && !pcg) return setErr('Upload a PCG (.wav) file.');
     if (inputMode === 'file' && adult && !ecg) return setErr('Adult patients require an ECG signal (.npy) file.');
     setErr(''); setBusy(true);
@@ -160,7 +163,7 @@ function Upload() {
           <button className={inputMode === 'hardware' ? 'on' : ''} onClick={() => selectInputMode('hardware')}>Record from hardware</button>
         </div>
         {inputMode === 'hardware'
-          ? <p className="muted">Click Start recording to capture {5} seconds of ECG + PCG data from the connected serial device. The backend reads the configured COM port at 115200 baud; keep the sensors connected until capture completes.</p>
+          ? <p className="muted">For patients under 18, click Start recording to capture {5} seconds of ECG + PCG data from the connected serial device. Adult hardware analysis is unavailable with the current backend model; use file upload for adult patients.</p>
           : <p className="muted">Upload the signals recorded by the device.</p>}
       </section>
       <div className="grid2">
