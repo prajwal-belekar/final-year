@@ -48,7 +48,7 @@ This document records the changes made to the Hridaya Vacha project.
 - Documented that the backend reads the configured COM port at `115200` baud.
 - Updated model labels so they distinguish hardware capture from file upload:
   - Hardware PCG capture for pediatric analysis.
-  - Hardware PCG capture with ECG captured for adult analysis.
+  - Adult analysis through PCG and ECG file upload.
   - PCG/ECG file upload for file-based analysis.
 - Switching to hardware mode now clears previously selected:
   - PCG files.
@@ -64,6 +64,14 @@ This document records the changes made to the Hridaya Vacha project.
 
 - The browser does not access COM13 directly. The backend performs all serial
   communication.
+- Added a client-side guard that prevents adult patients from starting
+  hardware analysis because the current backend/model contract rejects the
+  adult two-tensor hardware request.
+- Adult hardware mode now displays a clear message directing the user to
+  upload a PCG `.wav` file and ECG `.npy` file instead of producing a backend
+  HTTP 500 error.
+- Pediatric hardware analysis remains available through the existing hardware
+  endpoint.
 
 ### `frontend/src/api.js`
 
@@ -120,7 +128,20 @@ This document records the changes made to the Hridaya Vacha project.
   npm run build
   ```
 
+- Verified that the adult hardware guard is included in the production build.
+
 ## 7. Current hardware limitation
 
 The existing backend and saved models remain the source of truth for model
-input and output behavior. The frontend does not alter that contract.
+input and output behavior. The current adult hardware path is not supported by
+the saved model contract, so the frontend blocks that request and directs
+users to the supported adult file-upload workflow.
+
+## 8. Latest frontend compatibility commit
+
+```text
+4f39e43 Guard unsupported adult hardware analysis
+```
+
+This commit was pushed to the `main`, `development`, and
+`hardware-integration` branches of the project repository.
