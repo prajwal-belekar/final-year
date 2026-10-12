@@ -30,37 +30,14 @@ This document records the changes made to the Hridaya Vacha project.
   $env:HARDWARE_PORT = "COM13"
   ```
 
-## 2. Backend changes
+## 2. Backend compatibility
 
-### `backend/src/app.py`
-
-- Added named-input model prediction handling through `predict_with_model()`.
-- The helper inspects the saved Keras model input names and passes the PCG
-  tensor using the correct named input.
-- This fixes the Keras error caused by passing unsupported positional tensors:
-
-  ```text
-  Layer "functional" expects 1 named input(s) ...
-  ```
-
-- Pediatric and adult models can now be invoked using their saved input
-  contracts.
-- Hardware capture continues to collect ECG and PCG data.
-- Adult hardware ECG data is still captured, packaged, and validated.
-- Verified that the saved pediatric and adult model files can both complete a
-  prediction using the updated helper.
-
-### `backend/src/hardware_bridge.py`
-
-- Existing serial hardware integration was verified.
-- The bridge:
-  - Detects the configured serial port.
-  - Opens the device at `115200` baud.
-  - Reads comma-separated ECG and PCG samples.
-  - Captures a five-second window.
-  - Packages PCG data as an in-memory WAV file.
-  - Packages ECG data as an in-memory NumPy file.
-  - Sends the captured data to the prediction endpoint.
+- No backend code changes are retained.
+- The existing backend endpoints and serial bridge remain unchanged.
+- The existing `/api/predict` and `/api/hardware/predict` contracts are used by
+  the frontend.
+- The frontend sends hardware requests to the backend rather than trying to
+  access the Windows COM port from the browser.
 
 ## 3. Frontend changes
 
@@ -136,9 +113,6 @@ This document records the changes made to the Hridaya Vacha project.
 
 - Verified the FTDI device is visible as COM13.
 - Verified `pyserial` can discover COM13.
-- Verified backend Python syntax with `py_compile`.
-- Verified pediatric model prediction.
-- Verified adult model prediction.
 - Verified frontend diagnostics report no errors.
 - Built the frontend successfully with:
 
@@ -148,8 +122,5 @@ This document records the changes made to the Hridaya Vacha project.
 
 ## 7. Current hardware limitation
 
-The current saved adult model exposes only a PCG input named
-`pcg_2d_input`. The backend captures ECG data for the adult hardware flow, but
-this particular saved adult model does not currently consume a separate ECG
-tensor. A true PCG-plus-ECG adult model would need to be retrained or exported
-with a second ECG input.
+The existing backend and saved models remain the source of truth for model
+input and output behavior. The frontend does not alter that contract.

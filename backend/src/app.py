@@ -94,31 +94,6 @@ def process_ecg_file(ecg_path, target_size=(224, 224)):
         return np.zeros((*target_size, 1), dtype=np.float32)
 
 
-def predict_with_model(model, pcg_input, ecg_input=None):
-    """Run a model using its saved named-input contract."""
-    input_names = [tensor.name.split(":")[0] for tensor in model.inputs]
-    model_inputs = {}
-
-    pcg_name = next((name for name in input_names if "pcg" in name.lower()), None)
-    if pcg_name is None:
-        raise ValueError(f"Model does not expose a PCG input. Available inputs: {input_names}")
-    model_inputs[pcg_name] = pcg_input
-
-    ecg_names = [name for name in input_names if "ecg" in name.lower()]
-    if ecg_names:
-        if ecg_input is None:
-            raise ValueError("Model requires an ECG input, but no ECG signal was provided.")
-        model_inputs[ecg_names[0]] = ecg_input
-
-    if len(model_inputs) != len(input_names):
-        raise ValueError(
-            f"Model input contract is unsupported. Expected {input_names}, "
-            f"prepared {list(model_inputs)}."
-        )
-
-    return float(model.predict(model_inputs, verbose=0)[0][0])
-
-
 def validate_record_header(header_bytes, audio_filename):
     """Validate a PhysioNet .hea companion file without treating it as signal data."""
     try:
@@ -191,10 +166,10 @@ async def predict(
             ecg_2d = process_ecg_file(temp_ecg)
             ecg_input = np.expand_dims(ecg_2d, axis=0)
 
-            prob = predict_with_model(model, pcg_input, ecg_input)
+            prob = float(model.predict([pcg_input, ecg_input], verbose=0)[0][0])
             threshold = 0.50
         else:
-            prob = predict_with_model(model, pcg_input)
+            prob = float(model.predict(pcg_input, verbose=0)[0][0])
             threshold = 0.82
 
         is_abnormal = prob >= threshold
