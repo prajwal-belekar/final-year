@@ -1,0 +1,21 @@
+# Python Virtual Environments
+venv/
+env/
+__pycache__/
+*.pyc
+
+# Data & Models (DO NOT PUSH TO GITHUB)
+data/
+models/*
+!models/adult_multimodal_presentation.keras
+!models/pediatric_multimodal_presentation.keras
+*.h5
+*.hdf5
+!models/adult_multimodal_presentation.keras
+!models/pediatric_multimodal_presentation.keras
+*.h5
+*.hdf5
+
+# IDEs
+.vscode/
+.idea/*.tar.gz

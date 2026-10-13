@@ -1,17 +1,26 @@
-# Python Virtual Environments
+# Python virtual environments and caches
 venv/
 env/
+.venv/
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+.pytest_cache/
 
-# Data & Models (DO NOT PUSH TO GITHUB)
-data/
-models/*
-!models/adult_multimodal_presentation.keras
-!models/pediatric_multimodal_presentation.keras
-*.h5
-*.hdf5
+# Node dependencies and build output
+frontend/node_modules/
+frontend/dist/
 
-# IDEs
+# Local environment configuration
+.env
+*.env
+!.env.example
+frontend/.env
+
+# IDE and tooling files
 .vscode/
-.idea/*.tar.gz
+.idea/
+
+# Logs
+*.log
