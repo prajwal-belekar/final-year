@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState, useRef, Fragme
 import { BrowserRouter, Routes, Route, Navigate, NavLink, useNavigate, useParams } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceArea } from 'recharts';
 import { diagnose, severityOf, makeSeries, wavToSeries, BASE, ENDPOINT, checkBackend } from './api';
-import { checkHardwareStatus, recordFromHardware } from './hardwareService';
+import { checkHardwareStatus, recordFromHardware, samplesToSeries } from './hardwareService';
 
 const Store = createContext(null);
 const useStore = () => useContext(Store);
@@ -263,7 +263,13 @@ function Upload() {
       clearInterval(timerIntervalRef.current);
       timerIntervalRef.current = null;
       setElapsed(duration);
-      setRecordedData(result);
+      setRecordedData({
+        ...result,
+        preview: {
+          ecg: samplesToSeries(result.preview?.ecg, result.sampleRate),
+          pcg: samplesToSeries(result.preview?.pcg, result.sampleRate),
+        },
+      });
       setHwSuccess(
         `Recording completed: ${result.duration}s acquired (${result.sampleCount?.toLocaleString() || '40,000'} frames at ${result.sampleRate} Hz).`
       );
@@ -627,11 +633,13 @@ function Upload() {
                   </span>
                 </div>
                 <div>
-                  <h5 style={{ margin: '0 0 6px 0', color: '#2b6a9b' }}>ECG Lead (MAX30003 SPI)</h5>
+                  <h5 style={{ margin: '0 0 6px 0', color: '#2b6a9b' }}>ECG continuous waveform (MAX30003 SPI)</h5>
                   {recordedData.preview?.ecg?.length ? (
-                    <Chart data={recordedData.preview.ecg} color="#2b6a9b" height={180} />
+                  <div className="hw-ecg-waveform">
+                    <Chart data={recordedData.preview.ecg} color="#2b6a9b" height={240} />
+                  </div>
                   ) : (
-                    <p className="muted small">No ECG samples returned</p>
+                  <p className="muted small">No ECG samples were returned by the hardware bridge.</p>
                   )}
                 </div>
                 <div>
@@ -701,6 +709,7 @@ function Results() {
   const [tab, setTab] = useState('combined');
   const [note, setNote] = useState(rec?.notes || '');
   const [saved, setSaved] = useState(false);
+  const [gradcamError, setGradcamError] = useState(false);
   useEffect(() => { if (!rec) return; const t = setTimeout(() => { if (note !== rec.notes) { updateRecord(rid, { notes: note }); setSaved(true); } }, 800); return () => clearTimeout(t); }, [note]);
   if (!rec) return <><p>Record not found.</p><button className="btn" onClick={() => nav('/patients')}>Back to records</button></>;
 
@@ -713,7 +722,7 @@ function Results() {
   if (abnormal) risk.push('Abnormal classification returned by the backend');
   if (r.confidence >= 90) risk.push(`High-confidence prediction (${r.confidence}%)`);
   if (r.emat > 90) risk.push(`EMAT of ${r.emat} ms is above the 60–90 ms reference range`);
-  const img = r.image && (/^(data:|https?:)/.test(r.image) ? r.image : `data:image/png;base64,${r.image}`);
+  const img = r.image && (/^(data:|https?:|blob:)/.test(r.image) ? r.image : `data:image/png;base64,${r.image}`);
   const events = Array.isArray(r.events) ? r.events : [];
 
   return (
@@ -803,10 +812,38 @@ function Results() {
       </div>
 
       <section className="card">
-        <h3>Grad-CAM explanation</h3>
-        <p className="muted">Highlights the parts of the signals that most influenced the model's decision.</p>
-        {img ? <img className="cam" alt="Grad-CAM heatmap" src={img} />
-          : <p className="muted pad">No heatmap image for this record. The backend sends it as <code>explanation_image</code> (base64) and it is kept for the current session only.</p>}
+        <div className="row gradcam-heading">
+          <div>
+            <h3>Grad-CAM explanation</h3>
+            <p className="muted">Highlights the parts of the PCG scalogram that most influenced the model's decision.</p>
+          </div>
+          <span className={`gradcam-status ${img && !gradcamError ? 'available' : 'unavailable'}`}>
+            <span className="status-dot" />{img && !gradcamError ? 'Available' : 'Not available'}
+          </span>
+        </div>
+        {img && !gradcamError ? (
+          <figure className="gradcam-figure">
+            <img
+              className="cam"
+              alt="Grad-CAM heatmap overlay returned by the backend"
+              src={img}
+              onError={() => setGradcamError(true)}
+            />
+            <figcaption className="muted small">
+              Red and yellow regions indicate stronger model attention; blue regions indicate lower attention.
+            </figcaption>
+          </figure>
+        ) : (
+          <div className="gradcam-empty">
+            <span className="gradcam-empty-icon" aria-hidden="true">◎</span>
+            <p><b>No Grad-CAM output was returned.</b></p>
+            <p className="muted small">
+              {gradcamError
+                ? 'The backend provided an image, but the browser could not load it.'
+                : <>The backend response did not include a valid <code>explanation_image</code>, <code>gradcam_image</code>, or <code>heatmap</code> value.</>}
+            </p>
+          </div>
+        )}
       </section>
 
       <section className="card">

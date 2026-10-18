@@ -14,6 +14,25 @@ export function base64ToFile(base64Data, filename, mimeType) {
 }
 
 /**
+ * Converts the numeric preview returned by the hardware bridge into points
+ * consumed by the waveform chart. The bridge intentionally returns a bounded
+ * preview, so the displayed time axis is based on the preview sample rate.
+ */
+export function samplesToSeries(samples, sampleRate = 4000) {
+  if (!Array.isArray(samples) || !samples.length) return null;
+  const rate = Number(sampleRate) > 0 ? Number(sampleRate) : 4000;
+  return samples
+    .map((sample, index) => {
+      const value = typeof sample === 'object' && sample !== null ? sample.v : sample;
+      const numericValue = Number(value);
+      return Number.isFinite(numericValue)
+        ? { t: +(index / rate).toFixed(4), v: numericValue }
+        : null;
+    })
+    .filter(Boolean);
+}
+
+/**
  * Queries the hardware bridge status on the backend.
  * Checks whether the ESP32-S3 microcontroller is actively detected on a serial port (e.g. COM3 or /dev/ttyUSB0).
  */
@@ -127,4 +146,3 @@ export async function recordFromHardware({ duration = 10, abortSignal } = {}) {
     npyFile,
   };
 }
-

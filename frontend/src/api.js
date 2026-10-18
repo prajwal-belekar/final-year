@@ -13,6 +13,15 @@ const F = {
 const pick = (o, keys) => { for (const k of keys) if (o?.[k] != null) return o[k]; return null; };
 const num = (v) => { if (v == null) return null; const n = parseFloat(String(v).replace('%', '')); return Number.isNaN(n) ? null : n; };
 
+function gradcamImage(raw) {
+  const value = pick(raw, ['explanation_image', 'gradcam_image', 'gradcam_output', 'heatmap', 'gradcam', 'grad_cam']);
+  if (typeof value === 'string') return value;
+  if (value && typeof value === 'object') {
+    return pick(value, ['image', 'url', 'data', 'base64', 'src']);
+  }
+  return null;
+}
+
 /* Turns whatever JSON the backend returns into one predictable shape. Original is kept in `raw`. */
 export function normalize(raw) {
   let conf = num(pick(raw, ['confidence', 'probability', 'score']));
@@ -23,7 +32,7 @@ export function normalize(raw) {
     raw, status: pick(raw, ['status']) ?? 'success', diagnosis, confidence: conf,
     model_used: pick(raw, ['model_used', 'model', 'architecture']),
     recommendation: pick(raw, ['recommendation', 'advice']),
-    image: pick(raw, ['explanation_image', 'gradcam_image', 'heatmap', 'gradcam']),
+    image: gradcamImage(raw),
     emat: num(pick(raw, ['emat', 'emat_ms'])), heart_rate: num(pick(raw, ['heart_rate', 'hr', 'bpm'])),
     systolic_duration: num(pick(raw, ['systolic_duration', 'systolic_duration_ms'])),
     severity: num(pick(raw, ['severity_score', 'severity'])),

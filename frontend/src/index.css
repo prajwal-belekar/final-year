@@ -606,8 +606,98 @@ td {
   height: auto;
   border-radius: 8px;
   display: block;
-  margin: 8px auto;
+  margin: 8px auto 4px;
   box-shadow: var(--card-shadow);
+}
+
+.gradcam-heading {
+  align-items: flex-start;
+}
+
+.gradcam-heading h3 {
+  margin-bottom: 4px;
+}
+
+.gradcam-heading p {
+  margin: 0;
+}
+
+.gradcam-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex-shrink: 0;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.gradcam-status .status-dot {
+  width: 7px;
+  height: 7px;
+}
+
+.gradcam-status.available {
+  color: var(--ok);
+  background: #e6f7ef;
+}
+
+.gradcam-status.available .status-dot {
+  background: var(--ok);
+}
+
+.gradcam-status.unavailable {
+  color: var(--muted);
+  background: #eef2f4;
+}
+
+.gradcam-status.unavailable .status-dot {
+  background: var(--muted);
+}
+
+.gradcam-figure {
+  margin: 14px 0 0;
+  padding: 12px;
+  background: #f8fafc;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+
+.gradcam-figure .cam {
+  max-height: 520px;
+  object-fit: contain;
+}
+
+.gradcam-figure figcaption {
+  text-align: center;
+  margin-top: 8px;
+}
+
+.gradcam-empty {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  padding: 30px 16px;
+  margin-top: 14px;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-sm);
+  background: #f8fafc;
+}
+
+.gradcam-empty p {
+  margin: 4px 0 0;
+}
+
+.gradcam-empty-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  color: var(--muted);
+  background: #e9eff3;
+  font-size: 1.5rem;
 }
 
 .tabs {
@@ -1092,6 +1182,17 @@ code {
   margin: 0;
   font-size: 0.95rem;
   color: var(--ink);
+}
+
+.hw-ecg-waveform {
+  padding: 8px 8px 2px;
+  border: 1px solid rgba(43, 106, 155, 0.2);
+  border-radius: var(--radius-sm);
+  background:
+    linear-gradient(rgba(43, 106, 155, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(43, 106, 155, 0.06) 1px, transparent 1px),
+    #fff;
+  background-size: 100% 24px, 48px 100%, auto;
 }
 
 @media (max-width: 580px) {
