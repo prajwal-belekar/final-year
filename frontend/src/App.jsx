@@ -714,7 +714,6 @@ function Results() {
   if (!rec) return <><p>Record not found.</p><button className="btn" onClick={() => nav('/patients')}>Back to records</button></>;
 
   const r = rec.result, sev = severityOf(r), abnormal = r.diagnosis === 'Abnormal', known = sev.level !== 'Unknown';
-  const na = (v, u) => (v == null ? 'Not provided by backend' : `${v} ${u}`);
   const { ecg, pcg } = rec.series || {};
   const hasSig = ecg || pcg;
   const showEcg = ecg && tab !== 'pcg', showPcg = pcg && tab !== 'ecg';
@@ -778,28 +777,23 @@ function Results() {
         </div>
       </section>
 
-      <section className="card">
+      {hasSig && <section className="card">
         <h3>Signals</h3>
-        {hasSig ? (
-          <>
-            <div className="tabs">{[['combined', 'Combined view'], ['ecg', 'ECG analysis'], ['pcg', 'PCG analysis']].map(([k, l]) =>
-              <button key={k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>{l}</button>)}</div>
-            {showEcg && <><h4>ECG signal</h4><Chart data={ecg} color="#2b6a9b" height={tab === 'ecg' ? 300 : 200} /></>}
-            {showPcg && <><h4>PCG signal</h4><Chart data={pcg} color="#1f9d8f" height={tab === 'pcg' ? 300 : 200} /></>}
-            {!ecg && <p className="muted small">ECG waveform not returned by the backend. Return an <code>ecg_signal</code> array (plus <code>ecg_fs</code>) to plot it.</p>}
-          </>
-        ) : <p className="muted pad">No waveform data for this record. Waveforms are kept for the current session only.</p>}
-      </section>
+        <div className="tabs">{[['combined', 'Combined view'], ['ecg', 'ECG analysis'], ['pcg', 'PCG analysis']].map(([k, l]) =>
+          <button key={k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>{l}</button>)}</div>
+        {showEcg && <><h4>ECG signal</h4><Chart data={ecg} color="#2b6a9b" height={tab === 'ecg' ? 300 : 200} /></>}
+        {showPcg && <><h4>PCG signal</h4><Chart data={pcg} color="#1f9d8f" height={tab === 'pcg' ? 300 : 200} /></>}
+      </section>}
 
       <div className="grid3">
         <section className="card"><h3>Detected events</h3>
           <p><b>Diagnosis</b><br />{r.diagnosis}{r.confidence != null && ` · ${r.confidence}% confidence`}</p>
-          {events.length ? <ul>{events.map((e, i) => <li key={i}>{typeof e === 'string' ? e : JSON.stringify(e)}</li>)}</ul> : <p className="muted small">No event list provided by backend.</p>}
-          <p><b>Explainability</b><br />{img ? 'Grad-CAM available' : 'No Grad-CAM image returned'}</p></section>
-        <section className="card"><h3>Timing metrics</h3>
-          <p><b>EMAT</b> (normal 60–90 ms)<br /><span className="big">{na(r.emat, 'ms')}</span></p>
-          <p><b>Heart rate</b><br /><span className="big">{na(r.heart_rate, 'bpm')}</span></p>
-          <p><b>Systolic duration</b><br /><span className="big">{na(r.systolic_duration, 'ms')}</span></p></section>
+          {events.length > 0 && <ul>{events.map((e, i) => <li key={i}>{typeof e === 'string' ? e : JSON.stringify(e)}</li>)}</ul>}
+          {img && <p><b>Explainability</b><br />Grad-CAM available</p>}</section>
+        {(r.emat != null || r.heart_rate != null || r.systolic_duration != null) && <section className="card"><h3>Timing metrics</h3>
+          {r.emat != null && <p><b>EMAT</b> (normal 60–90 ms)<br /><span className="big">{r.emat} ms</span></p>}
+          {r.heart_rate != null && <p><b>Heart rate</b><br /><span className="big">{r.heart_rate} bpm</span></p>}
+          {r.systolic_duration != null && <p><b>Systolic duration</b><br /><span className="big">{r.systolic_duration} ms</span></p>}</section>}
         <section className="card"><h3>Severity score</h3>
           {known ? <>
             <div className="score"><b>{sev.score}</b>/100</div>
@@ -811,7 +805,7 @@ function Results() {
           </> : <p className="muted">Backend response had no usable diagnosis or confidence.</p>}</section>
       </div>
 
-      <section className="card">
+      {img && !gradcamError && <section className="card">
         <div className="row gradcam-heading">
           <div>
             <h3>Grad-CAM explanation</h3>
@@ -821,30 +815,18 @@ function Results() {
             <span className="status-dot" />{img && !gradcamError ? 'Available' : 'Not available'}
           </span>
         </div>
-        {img && !gradcamError ? (
-          <figure className="gradcam-figure">
-            <img
-              className="cam"
-              alt="Grad-CAM heatmap overlay returned by the backend"
-              src={img}
-              onError={() => setGradcamError(true)}
-            />
-            <figcaption className="muted small">
-              Red and yellow regions indicate stronger model attention; blue regions indicate lower attention.
-            </figcaption>
-          </figure>
-        ) : (
-          <div className="gradcam-empty">
-            <span className="gradcam-empty-icon" aria-hidden="true">◎</span>
-            <p><b>No Grad-CAM output was returned.</b></p>
-            <p className="muted small">
-              {gradcamError
-                ? 'The backend provided an image, but the browser could not load it.'
-                : <>The backend response did not include a valid <code>explanation_image</code>, <code>gradcam_image</code>, or <code>heatmap</code> value.</>}
-            </p>
-          </div>
-        )}
-      </section>
+        <figure className="gradcam-figure">
+          <img
+            className="cam"
+            alt="Grad-CAM heatmap overlay returned by the backend"
+            src={img}
+            onError={() => setGradcamError(true)}
+          />
+          <figcaption className="muted small">
+            Red and yellow regions indicate stronger model attention; blue regions indicate lower attention.
+          </figcaption>
+        </figure>
+      </section>}
 
       <section className="card">
         <h3>Backend response</h3>

@@ -14,7 +14,8 @@
 The app POSTs multipart form data to `VITE_API_URL + VITE_ENDPOINT` (patient_id, age, gender, ecg_file, pcg_file;
 rename the fields in `.env`). It reads: status, diagnosis, confidence, model_used, explanation_image (base64).
 Optional extras it displays if present: emat, heart_rate, systolic_duration, severity_score, events,
-ecg_signal / pcg_signal (+ ecg_fs / pcg_fs). Anything missing shows "Not provided by backend".
+ecg_signal / pcg_signal (+ ecg_fs / pcg_fs). Optional result sections are hidden when the backend
+does not return their data.
 The full raw JSON is shown on each result page for debugging.
 
 ### Patient Clinical Details (Medical History & Medications)

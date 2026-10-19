@@ -587,7 +587,15 @@ td {
   position: relative;
   height: 10px;
   border-radius: 6px;
-  background: linear-gradient(90deg, #1f9d6f, #f0a04b, #e03e4b);
+  background: linear-gradient(
+    90deg,
+    var(--ok) 0%,
+    var(--ok) 50%,
+    var(--mid) 50%,
+    var(--mid) 75%,
+    var(--bad) 75%,
+    var(--bad) 100%
+  );
   margin: 12px 0 16px;
 }
 
